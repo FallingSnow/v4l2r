@@ -254,6 +254,7 @@ impl<D: Direction> Queue<D, QueueInit> {
         self,
         memory_type: P::SupportedMemoryType,
         count: u32,
+        file_descriptors: Option<&[&[std::os::unix::io::RawFd]]>
     ) -> Result<Queue<D, BuffersAllocated<P>>, RequestBuffersError> {
         let type_ = self.inner.type_;
         let num_buffers: usize = ioctl::reqbufs(&self.inner, type_, memory_type.into(), count)?;
@@ -268,7 +269,11 @@ impl<D: Direction> Queue<D, QueueInit> {
         // the error from ioctl::querybuf(), if any.
         let mut buffer_features = Vec::new();
         for i in 0..num_buffers {
-            buffer_features.push(ioctl::querybuf(&self.inner, self.inner.type_, i)?);
+            let file_descriptors = match file_descriptors {
+                Some(fds) => Some(fds[i]),
+                _ => None
+            };
+            buffer_features.push(ioctl::querybuf(&self.inner, self.inner.type_, i, file_descriptors)?);
         }
 
         let buffer_info = buffer_features
@@ -296,7 +301,7 @@ impl<D: Direction> Queue<D, QueueInit> {
         self,
         count: u32,
     ) -> Result<Queue<D, BuffersAllocated<P>>, RequestBuffersError> {
-        self.request_buffers_generic(P::MEMORY_TYPE, count)
+        self.request_buffers_generic(P::MEMORY_TYPE, count, None)
     }
 }
 

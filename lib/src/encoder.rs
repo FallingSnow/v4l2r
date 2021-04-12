@@ -148,7 +148,7 @@ impl Encoder<AwaitingOutputBuffers> {
                 output_queue: self
                     .state
                     .output_queue
-                    .request_buffers_generic::<OP>(memory_type, num_output as u32)?,
+                    .request_buffers_generic::<OP>(memory_type, num_output as u32, None)?,
                 capture_queue: self.state.capture_queue,
             },
         })
@@ -194,7 +194,7 @@ impl<OP: BufferHandles> Encoder<AwaitingCaptureBuffers<OP>> {
                 capture_queue: self
                     .state
                     .capture_queue
-                    .request_buffers_generic::<P::HandleType>(memory_type, num_capture as u32)?,
+                    .request_buffers_generic::<P::HandleType>(memory_type, num_capture as u32, None)?,
                 capture_memory_provider,
                 poll_wakeups_counter: None,
             },

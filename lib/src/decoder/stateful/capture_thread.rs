@@ -336,7 +336,7 @@ where
         // Allocate the new CAPTURE buffers and get ourselves a new waker for
         // returning buffers.
         let capture_queue =
-            capture_queue.request_buffers_generic::<P::HandleType>(mem_type, num_buffers as u32)?;
+            capture_queue.request_buffers_generic::<P::HandleType>(mem_type, num_buffers as u32, None)?;
         let cap_buffer_waker = self
             .poller
             .add_waker(CAPTURE_READY)

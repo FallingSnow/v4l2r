@@ -143,7 +143,7 @@ pub fn run<F: FnMut(&[u8])>(
     let mut capture_mappings = Vec::new();
     for i in 0..num_capture_buffers {
         let query_buf: QueryBuffer =
-            querybuf(&fd, capture_queue, i).expect("Failed to query buffer");
+            querybuf(&fd, capture_queue, i, None).expect("Failed to query buffer");
         println!(
             "Capture buffer {} at offset 0x{:0x}, length 0x{:0x}",
             i, query_buf.planes[0].mem_offset, query_buf.planes[0].length
@@ -197,7 +197,7 @@ pub fn run<F: FnMut(&[u8])>(
         match output_mem {
             MemoryType::MMAP => {
                 let buffer_info: QueryBuffer =
-                    querybuf(&fd, output_queue_type, output_buffer_index)
+                    querybuf(&fd, output_queue_type, output_buffer_index, None)
                         .expect("Failed to query output buffer");
                 let plane = &buffer_info.planes[0];
                 let mut mapping =

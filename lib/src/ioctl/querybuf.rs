@@ -73,6 +73,7 @@ pub fn querybuf<T: QueryBuf, F: AsRawFd>(
     fd: &F,
     queue: QueueType,
     index: usize,
+    file_descriptors: Option<&[std::os::unix::io::RawFd]>,
 ) -> Result<T, QueryBufError> {
     let mut v4l2_buf = bindings::v4l2_buffer {
         index: index as u32,
@@ -82,12 +83,28 @@ pub fn querybuf<T: QueryBuf, F: AsRawFd>(
 
     if is_multi_planar(queue) {
         let mut plane_data: PlaneData = Default::default();
+
+        if let Some(fds) = file_descriptors {
+            for (i, &fd) in fds.iter().enumerate() {
+                use std::os::unix::io::FromRawFd;
+                use std::convert::TryFrom;
+                let file = unsafe {std::fs::File::from_raw_fd(fd)};
+                let metadata = file.metadata().unwrap();
+                plane_data[i].length = u32::try_from(metadata.len()).unwrap();
+                plane_data[i].m.fd = fd;
+            }
+        }
+
         v4l2_buf.m.planes = plane_data.as_mut_ptr();
         v4l2_buf.length = plane_data.len() as u32;
 
         unsafe { ioctl::vidioc_querybuf(fd.as_raw_fd(), &mut v4l2_buf) }?;
         Ok(T::from_v4l2_buffer(&v4l2_buf, Some(&plane_data)))
     } else {
+        if let Some(fds) = file_descriptors {
+            v4l2_buf.m.fd = fds[0];
+        }
+        
         unsafe { ioctl::vidioc_querybuf(fd.as_raw_fd(), &mut v4l2_buf) }?;
         Ok(T::from_v4l2_buffer(&v4l2_buf, None))
     }

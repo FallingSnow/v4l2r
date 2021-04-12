@@ -126,6 +126,7 @@ impl Decoder<AwaitingOutputBuffers> {
         self,
         memory_type: OP::SupportedMemoryType,
         num_buffers: usize,
+        file_descriptors: Option<&[&[std::os::unix::io::RawFd]]>
     ) -> Result<Decoder<ReadyToDecode<OP>>, RequestBuffersError> {
         Ok(Decoder {
             device: self.device,
@@ -133,7 +134,7 @@ impl Decoder<AwaitingOutputBuffers> {
                 output_queue: self
                     .state
                     .output_queue
-                    .request_buffers_generic::<OP>(memory_type, num_buffers as u32)?,
+                    .request_buffers_generic::<OP>(memory_type, num_buffers as u32, file_descriptors)?,
                 capture_queue: self.state.capture_queue,
                 poll_wakeups_counter: None,
             },
@@ -144,7 +145,15 @@ impl Decoder<AwaitingOutputBuffers> {
         self,
         num_output: usize,
     ) -> Result<Decoder<ReadyToDecode<OP>>, RequestBuffersError> {
-        self.allocate_output_buffers_generic(OP::MEMORY_TYPE, num_output)
+        self.allocate_output_buffers_generic(OP::MEMORY_TYPE, num_output, None)
+    }
+    #[cfg(unix)]
+    pub fn allocate_output_drm_buffers<OP: PrimitiveBufferHandles>(
+        self,
+        num_output: usize,
+        file_descriptors: &[&[std::os::unix::io::RawFd]]
+    ) -> Result<Decoder<ReadyToDecode<OP>>, RequestBuffersError> {
+        self.allocate_output_buffers_generic(OP::MEMORY_TYPE, num_output, Some(file_descriptors))
     }
 }
 

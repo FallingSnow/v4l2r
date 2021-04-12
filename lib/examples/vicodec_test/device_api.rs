@@ -129,7 +129,7 @@ pub fn run<F: FnMut(&[u8])>(
     };
 
     let output_queue = output_queue
-        .request_buffers_generic::<GenericBufferHandles>(output_mem, 2)
+        .request_buffers_generic::<GenericBufferHandles>(output_mem, 2, None)
         .expect("Failed to allocate output buffers");
 
     let capture_queue = capture_queue
